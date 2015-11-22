@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <taglib/tag_c.h>
 
 struct mp3_node {
 	struct mp3_node *next;
@@ -119,8 +120,6 @@ void insert_mp3(struct album_node *head, struct mp3_node *new_node){
 		
 		//define decade properties
 		strcpy(tmp_decade->decade,new_node->decade);
-
-		//TODO: define album properties
 	}
 	char realpath[256];
 	get_realpath(new_node->filename,realpath);
@@ -214,7 +213,7 @@ static int ytfs_write(const char *path, const char *buf, size_t size,
 	res = pwrite(fd, buf, size, offset);
 	if (res == -1)
 		res = -errno;
-	//check here whether or not file already exists in metadata structures.  can be done by checking the path, and whether or not 
+	//check here whether or not file already exists in metadata structures.  can be done by checking the path (if basename=/,is new file)
 	//run this if the file does not actually exist
 		//deter
 		//add file to metadata structures
@@ -225,10 +224,20 @@ static int ytfs_write(const char *path, const char *buf, size_t size,
 		strcat(tmp2,path);
 		printf("SQEE: %s\n",tmp2);
 		symlink(realpath,tmp2);
-		//copy into Album di
-		strcpy(tmp2,base_path);
-		strcat(tmp2,"Decades");
-		strcat(tmp2,path);
+
+		
+		TagLib_File *file;
+		file=taglib_file_new(realpath);
+		TagLib_Tag *tag;
+		tag = taglib_file_tag(file);
+
+		struct mp3_node *data_node=malloc(sizeof(struct mp3_node));
+		strcpy(data_node->filename,path);
+		strcpy(data_node->album,taglib_tag_album(tag));
+		int year_int=taglib_tag_year(tag);
+		int dec_int=year_int-(year_int%10);
+		sprintf(data_node->decade,"%d",dec_int);
+		
 	close(fd);
 	return res;
 }
