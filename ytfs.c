@@ -36,7 +36,7 @@ struct decade_node {
 struct decade_node* decade_head; 
 struct decade_node* album_head; 
 
-static const char *base_path = "/home/william/.ytfsmusic/";
+static const char *base_path = "/home/william/.ytfsmusic";
 
 
 
@@ -68,7 +68,7 @@ void get_realpath(const char* path, char* buf)
 	return;
 }
 
-void insert_mp3(struct album_node *head, struct mp3_node *new_node){
+void insert_mp3(struct mp3_node *new_node){
 	struct decade_node *tmp_decade=decade_head;
 	struct album_node *tmp_album;
 	int found_decade=0;
@@ -127,7 +127,7 @@ void insert_mp3(struct album_node *head, struct mp3_node *new_node){
 	//create directory in storage here
 	char tmpDecDir[256];
 	strcpy(tmpDecDir,base_path);
-	strcat(tmpDecDir,"Decades/");
+	strcat(tmpDecDir,"/Decades/");
 	strcat(tmpDecDir,new_node->decade);
 	if (found_decade == 0){
 		mkdir(tmpDecDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);  //only if found_decade is false;
@@ -142,7 +142,7 @@ void insert_mp3(struct album_node *head, struct mp3_node *new_node){
 
 	char tmpAlbDir[256];
 	strcpy(tmpAlbDir,base_path);
-	strcat(tmpAlbDir,"Albums/");
+	strcat(tmpAlbDir,"/Albums/");
 	strcat(tmpAlbDir,new_node->album);
 	if (found_album == 0){
 		mkdir(tmpAlbDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);  //only if found_album is false
@@ -184,10 +184,11 @@ static int ytfs_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;*/
 	} else {
-		char realpath[strlen(path)+25];
-		get_realpath(path,realpath);
-		printf("REALPATH: %s\n",realpath);
-		//strcpy(realpath,base_path);
+		char realpath[strlen(path)+strlen(base_path)];
+		//get_realpath(path,realpath);
+		//printf("REALPATH: %s\n",realpath);
+		strcpy(realpath,base_path);
+		strcat(realpath,path);
 		res = stat(realpath, stbuf);
 		if (res == -1)
 			return -errno;
@@ -218,13 +219,6 @@ static int ytfs_write(const char *path, const char *buf, size_t size,
 		//deter
 		//add file to metadata structures
 		//add directories to hidden file, 
-		char tmp2[256];
-		strcpy(tmp2,base_path);
-		strcat(tmp2,"Decades");
-		strcat(tmp2,path);
-		printf("SQEE: %s\n",tmp2);
-		symlink(realpath,tmp2);
-
 		
 		TagLib_File *file;
 		file=taglib_file_new(realpath);
@@ -233,11 +227,13 @@ static int ytfs_write(const char *path, const char *buf, size_t size,
 
 		struct mp3_node *data_node=malloc(sizeof(struct mp3_node));
 		strcpy(data_node->filename,path);
-		strcpy(data_node->album,taglib_tag_album(tag));
+		//strcpy(data_node->album,taglib_tag_album(tag));
+		strcpy(data_node->album,"test album");
 		int year_int=taglib_tag_year(tag);
 		int dec_int=year_int-(year_int%10);
 		sprintf(data_node->decade,"%d",dec_int);
-		
+		printf("%s, %s, %s\n",data_node->filename,data_node->album,data_node->decade);
+		insert_mp3(data_node);
 	close(fd);
 	return res;
 }
@@ -284,8 +280,10 @@ static int ytfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		(void) offset;
 		(void) fi;
 
-		char realpath[strlen(path)+25];
-		get_realpath(path,realpath);
+
+		char realpath[strlen(path)+strlen(base_path)];
+		strcpy(realpath,base_path);
+		strcat(realpath,path);
 		printf("REALPATH: %s\n",realpath);
 
 		dp = opendir(realpath);
