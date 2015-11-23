@@ -155,6 +155,35 @@ void insert_mp3(struct mp3_node *new_node){
 	symlink(realpath,tmpAlbDir);
 }
 
+void insert_mp3_2(const char* filename, char* album, char* decade){
+        char realpath[256];
+        get_realpath(filename,realpath);
+
+	char tmpDecDir[256];
+        strcpy(tmpDecDir,base_path);
+        strcat(tmpDecDir,"/Decades/");
+        strcat(tmpDecDir,decade);
+        printf("DECADE: %s\n",decade);
+        mkdir(tmpDecDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);  //only if found_decade is false;
+
+        strcat(tmpDecDir,"/");
+        strcat(tmpDecDir,album);
+        printf("ALBUM: %s\n",album);
+	mkdir(tmpDecDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); //only if found_album is false
+
+        strcat(tmpDecDir,filename);
+        symlink(realpath,tmpDecDir);
+
+        char tmpAlbDir[256];
+        strcpy(tmpAlbDir,base_path);
+        strcat(tmpAlbDir,"/Albums/");
+        strcat(tmpAlbDir,album);
+
+        mkdir(tmpAlbDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);  //only if found_album is f
+        strcat(tmpAlbDir,filename);
+        symlink(realpath,tmpAlbDir);
+}
+
 static int ytfs_open(const char *path, struct fuse_file_info *fi)
 {
 	int res;
@@ -223,21 +252,17 @@ static int ytfs_write(const char *path, const char *buf, size_t size,
 		//deter
 		//add file to metadata structures
 		//add directories to hidden file, 
-		
+		/*
 		TagLib_File *file;
 		file=taglib_file_new(realpath);
 		TagLib_Tag *tag;
 		tag = taglib_file_tag(file);
 
-		struct mp3_node *data_node=malloc(sizeof(struct mp3_node));
-		strcpy(data_node->filename,path);
-		strcpy(data_node->album,taglib_tag_album(tag));
-		//strcpy(data_node->album,"test album");
-		int year_int=taglib_tag_year(tag);
-		int dec_int=year_int-(year_int%10);
-		sprintf(data_node->decade,"%d",dec_int);
-		printf("%s, %s, %s\n",data_node->filename,data_node->album,data_node->decade);
-		insert_mp3(data_node);
+                int year_int=taglib_tag_year(tag);
+                int dec_int=year_int-(year_int%10);
+		char decade[4];
+                sprintf(decade,"%d",dec_int);
+		insert_mp3_2(path,taglib_tag_album(tag),decade);*/
 	close(fd);
 	return res;
 }
@@ -372,6 +397,36 @@ static int ytfs_readlink(const char *path, char *buf, size_t size)
 	return 0;
 }
 
+static int ytfs_flush(const char *path, struct fuse_file_info *fi)
+{
+  char realpath[256];
+  get_realpath(path,realpath);
+
+  TagLib_File *file;
+  file=taglib_file_new(realpath);
+  TagLib_Tag *tag;
+  tag = taglib_file_tag(file);
+
+  /*struct mp3_node *data_node=malloc(sizeof(struct mp3_node));
+                strcpy(data_node->filename,path);
+                strcpy(data_node->album,taglib_tag_album(tag));
+                //strcpy(data_node->album,"test album");
+                int year_int=taglib_tag_year(tag);
+                int dec_int=year_int-(year_int%10);
+                sprintf(data_node->decade,"%d",dec_int);
+                printf("%s, %s, %s\n",data_node->filename,data_node->album,data_node->decade);
+                insert_mp3(data_node);*/
+
+  int year_int=taglib_tag_year(tag);
+  int dec_int=year_int-(year_int%10);
+  char decade[4];
+  sprintf(decade,"%d",dec_int);
+  insert_mp3_2(path,taglib_tag_album(tag),decade);
+  taglib_tag_free_strings();
+  taglib_file_free(file);
+  return 0;
+}
+
 static struct fuse_operations ytfs_oper = {
 	.getattr	= ytfs_getattr,
 	.readdir	= ytfs_readdir,
@@ -380,7 +435,9 @@ static struct fuse_operations ytfs_oper = {
 	.chmod		= ytfs_chmod,
 	.write		= ytfs_write,
 	.mknod		= ytfs_mknod,
-	.readlink 	= ytfs_readlink
+	.readlink 	= ytfs_readlink,
+	.flush          = ytfs_flush
+	
 };
 
 int main(int argc, char *argv[])
