@@ -11,6 +11,8 @@
 #include <dirent.h>
 #include <taglib/tag_c.h>
 
+// compile with "gcc -Wall ytfs.c `pkg-config fuse --cflags --libs` -o ytfs -ltag_c"
+
 struct mp3_node {
 	struct mp3_node *next;
 	char album[30];
@@ -36,7 +38,7 @@ struct decade_node {
 struct decade_node* decade_head; 
 struct decade_node* album_head; 
 
-static const char *base_path = "/home/william/.ytfsmusic";
+static const char *base_path = "/home/ubuntu/.ytfsmusic";
 
 
 
@@ -59,11 +61,11 @@ void get_realpath(const char* path, char* buf)
 	tmp1=strdup(path);
 	filename=basename(tmp1);
 	//ensure basename is 
-	strcpy(buf,"/home/william/.ytfsmusic/");
+	strcpy(buf,"/home/ubuntu/.ytfsmusic/");
 	strcat(buf,filename);/*
 	printf("PATH: %s\n",path);
 	printf("FILENAME: %s\n",tmp1);
-	
+
 	printf("REALPATH: %s\n",buf);*/
 	return;
 }
@@ -81,10 +83,10 @@ void insert_mp3(struct mp3_node *new_node){
 		}
 		tmp_decade=tmp_decade->next;
 	}
-	
+
 	if (found_decade){
 		tmp_album=tmp_decade->albums;
-		
+
 		while(tmp_album != NULL){ //if at least one decade exists
 			if(strcmp(tmp_album->album_name,new_node->album)==0){
 				found_decade=1;
@@ -95,7 +97,7 @@ void insert_mp3(struct mp3_node *new_node){
 			}
 			tmp_album=tmp_album->next;
 		}
-		
+
 		//figure out if this is a new album.  if not, store album node in tmp_album
 		if (found_album){
 			new_node->next=tmp_album->music;
@@ -117,7 +119,7 @@ void insert_mp3(struct mp3_node *new_node){
 		strcpy(tmp_album->album_name,new_node->album);
 		tmp_album->music=new_node;
 		strcpy(tmp_album->decade,new_node->decade);
-		
+
 		//define decade properties
 		strcpy(tmp_decade->decade,new_node->decade);
 	}
@@ -130,11 +132,13 @@ void insert_mp3(struct mp3_node *new_node){
 	strcat(tmpDecDir,"/Decades/");
 	strcat(tmpDecDir,new_node->decade);
 	if (found_decade == 0){
+		printf("DECADE: %s\n",new_node->decade);
 		mkdir(tmpDecDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);  //only if found_decade is false;
 	}
 	strcat(tmpDecDir,"/");
 	strcat(tmpDecDir,new_node->album);
 	if (found_album == 0){
+                printf("ALBUM: %s\n",new_node->album);
 		mkdir(tmpDecDir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); //only if found_album is false
 	}
 	strcat(tmpDecDir,new_node->filename);
@@ -227,8 +231,8 @@ static int ytfs_write(const char *path, const char *buf, size_t size,
 
 		struct mp3_node *data_node=malloc(sizeof(struct mp3_node));
 		strcpy(data_node->filename,path);
-		//strcpy(data_node->album,taglib_tag_album(tag));
-		strcpy(data_node->album,"test album");
+		strcpy(data_node->album,taglib_tag_album(tag));
+		//strcpy(data_node->album,"test album");
 		int year_int=taglib_tag_year(tag);
 		int dec_int=year_int-(year_int%10);
 		sprintf(data_node->decade,"%d",dec_int);
@@ -271,7 +275,6 @@ static int ytfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		//LIST APPROPRIATE ALBUMS
 		//this will be a function which uses "base" as an input
 	} else if (strcmp(dir,"Albums")==0){ // (./Albums/{album})*/
-	
 	}else {//ELSE (./DECADE/{DECADE}/{Album}) OR (./{music})
 		//LIST APPROPRIATE MP3S
 		DIR *dp;
@@ -383,8 +386,8 @@ static struct fuse_operations ytfs_oper = {
 int main(int argc, char *argv[])
 {
 	umask(0);
-	mkdir("/home/william/.ytfsmusic/",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	mkdir("/home/william/.ytfsmusic/Decades",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	mkdir("/home/william/.ytfsmusic/Albums",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	mkdir("/home/ubuntu/.ytfsmusic/",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	mkdir("/home/ubuntu/.ytfsmusic/Decades",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	mkdir("/home/ubuntu/.ytfsmusic/Albums",S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	return fuse_main(argc, argv, &ytfs_oper, NULL);
 }
