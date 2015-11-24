@@ -262,6 +262,12 @@ static int ytfs_flush(const char *path, struct fuse_file_info *fi)
   insert_mp3_2(path,taglib_tag_album(tag),decade);
   taglib_tag_free_strings();
   taglib_file_free(file);
+
+  //send file to remote server
+  char curl_command[256];
+  sprintf(curl_command,"curl -X POST -F file=@\"%s\" http://127.0.0.1:8000",realpath);
+  system(curl_command);
+
   return 0;
 }
 
