@@ -193,6 +193,21 @@ static int ytfs_chmod(const char *path, mode_t mode)
 	return 0;
 }
 
+static int ytfs_chown(const char *path, uid_t uid, gid_t gid)
+{
+  int res;
+
+  char realpath[strlen(path)+25];
+  get_realpath(path,realpath);
+
+  res = chown(realpath, uid, gid);
+  if (res == -1)
+    return -errno;
+
+  return 0;
+}
+
+
 static int ytfs_mknod(const char *path, mode_t mode, dev_t rdev)
 {
 	int res;
@@ -271,6 +286,34 @@ static int ytfs_flush(const char *path, struct fuse_file_info *fi)
   return 0;
 }
 
+static int ytfs_utimens(const char *path, const struct timespec ts[2])
+{
+  int res;
+  /* don't use utime/utimes since they follow symlinks */
+
+  char realpath[256];
+  get_realpath(path,realpath);
+
+  res = utimensat(0, realpath, ts, AT_SYMLINK_NOFOLLOW);
+  if (res == -1){
+    return -errno;
+  }
+  return 0;
+}
+
+static int ytfs_truncate(const char *path, off_t size)
+{
+  char realpath[256];
+  get_realpath(path,realpath);
+
+
+  int res;
+  res = truncate(realpath, size);
+  if (res == -1)
+    return -errno;
+  return 0;
+}
+
 static struct fuse_operations ytfs_oper = {
 	.getattr	= ytfs_getattr,
 	.readdir	= ytfs_readdir,
@@ -280,8 +323,10 @@ static struct fuse_operations ytfs_oper = {
 	.write		= ytfs_write,
 	.mknod		= ytfs_mknod,
 	.readlink 	= ytfs_readlink,
-	.flush          = ytfs_flush
-	
+	.flush          = ytfs_flush,
+	.chown          = ytfs_chown,
+	.utimens        = ytfs_utimens,
+	.truncate       = ytfs_truncate
 };
 
 int main(int argc, char *argv[])
