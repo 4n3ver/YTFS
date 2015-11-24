@@ -48,6 +48,17 @@ void insert_mp3_2(const char* filename, char* album, char* decade){
         char realpath[256];
         get_realpath(filename,realpath);
 
+	//clear existing metadata structures
+	char* tmp1;
+	char* base_name;
+        tmp1=strdup(filename);
+        base_name=basename(tmp1);
+
+	char findCmd[256];
+	sprintf(findCmd,"find %s/*/ -name %s -delete",base_path,base_name);
+	printf("%s\n",findCmd);
+	system(findCmd);
+
 	char tmpDecDir[256];
         strcpy(tmpDecDir,base_path);
         strcat(tmpDecDir,"/Decades/");
