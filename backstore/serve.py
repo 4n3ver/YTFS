@@ -1,39 +1,18 @@
 #!/usr/bin/env python3
 
 
-import os
-import posixpath
-import http.server
-import urllib.request, urllib.parse, urllib.error
 import cgi
-import shutil
-import mimetypes
+import http.server
+import os
 import re
+import shutil
+import urllib.error
+import urllib.parse
+import urllib.request
 from io import BytesIO
 
 
-class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
-    """Simple HTTP request handler with GET/HEAD/POST commands.
-    This serves files from the current directory and any of its
-    subdirectories.  The MIME type for files is determined by
-    calling the .guess_type() method. And can reveive file uploaded
-    by client.
-    The GET/HEAD/POST requests are identical except that the HEAD
-    request omits the actual contents of the file.
-    """
-
-    def do_GET(self):
-        """Serve a GET request."""
-        f = self.send_head()
-        if f:
-            self.copyfile(f, self.wfile)
-            f.close()
-
-    def do_HEAD(self):
-        """Serve a HEAD request."""
-        f = self.send_head()
-        if f:
-            f.close()
+class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         """Serve a POST request."""
@@ -60,7 +39,7 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         if f:
             print(str(f))
-            self.copyfile(f, self.wfile)
+            shutil.copyfileobj(f, self.wfile)
             f.close()
 
     def deal_post_data(self):
@@ -110,47 +89,6 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 preline = line
         return (False, "Unexpect Ends of data.")
 
-    def send_head(self):
-        """Common code for GET and HEAD commands.
-        This sends the response code and MIME headers.
-        Return value is either a file object (which has to be copied
-        to the outputfile by the caller unless the command was HEAD,
-        and must be closed by the caller under all circumstances), or
-        None, in which case the caller has nothing further to do.
-        """
-        path = self.translate_path(self.path)
-        f = None
-        if os.path.isdir(path):
-            if not self.path.endswith('/'):
-                # redirect browser - doing basically what apache does
-                self.send_response(301)
-                self.send_header("Location", self.path + "/")
-                self.end_headers()
-                return None
-            for index in "index.html", "index.htm":
-                index = os.path.join(path, index)
-                if os.path.exists(index):
-                    path = index
-                    break
-            else:
-                return self.list_directory(path)
-        ctype = 'application/octet-stream'
-        try:
-            # Always read in binary mode. Opening files in text mode may cause
-            # newline translations, making the actual size of the content
-            # transmitted *less* than the content-length!
-            f = open(path, 'rb')
-        except IOError:
-            self.send_error(404, "File not found")
-            return None
-        self.send_response(200)
-        self.send_header("Content-type", ctype)
-        fs = os.fstat(f.fileno())
-        self.send_header("Content-Length", str(fs[6]))
-        self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
-        self.end_headers()
-        return f
-
     def list_directory(self, path):
         """Helper to produce a directory listing (absent index.html).
         Return value is either a file object, or None (indicating an
@@ -199,41 +137,6 @@ class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         return f
 
-    def translate_path(self, path):
-        """Translate a /-separated PATH to the local filename syntax.
-        Components that mean special things to the local file system
-        (e.g. drive or directory names) are ignored.  (XXX They should
-        probably be diagnosed.)
-        """
-        # abandon query parameters
-        path = path.split('?', 1)[0]
-        path = path.split('#', 1)[0]
-        path = posixpath.normpath(urllib.parse.unquote(path))
-        words = path.split('/')
-        words = [_f for _f in words if _f]
-        path = os.getcwd()
-        for word in words:
-            drive, word = os.path.splitdrive(word)
-            head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir):
-                continue
-            path = os.path.join(path, word)
-        return path
-
-    def copyfile(self, source, outputfile):
-        """Copy all data between two file objects.
-        The SOURCE argument is a file object open for reading
-        (or anything with a read() method) and the DESTINATION
-        argument is a file object open for writing (or
-        anything with a write() method).
-        The only reason for overriding this would be to change
-        the block size or perhaps to replace newlines by CRLF
-        -- note however that this the default server uses this
-        to copy binary data as well.
-        """
-        shutil.copyfileobj(source, outputfile)
-
-
 def serve(bind='', port=8000, HandlerClass=SimpleHTTPRequestHandler,
           ServerClass=http.server.HTTPServer):
     print('listening at ' + bind + ':' + str(port))
@@ -248,4 +151,3 @@ if __name__ == '__main__':
     else:
         print('bound to localhost, using default port: 8000')
         serve()
-	
