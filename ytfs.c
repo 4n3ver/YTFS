@@ -325,6 +325,28 @@ static int ytfs_truncate(const char *path, off_t size)
   return 0;
 }
 
+static int ytfs_unlink(const char *path)
+{
+  char* tmp1;
+  char* base_name;
+  tmp1=strdup(path);
+  base_name=basename(tmp1);
+
+  char findCmd[256];
+  sprintf(findCmd,"find %s/*/ -name %s -delete",base_path,base_name);
+  printf("%s\n",findCmd);
+  system(findCmd);
+
+  int res;
+
+  char realpath[strlen(path)+25];
+  get_realpath(path,realpath);
+  res = unlink(realpath);
+  if (res == -1)
+    return -errno;
+  return 0;
+} 
+
 static struct fuse_operations ytfs_oper = {
 	.getattr	= ytfs_getattr,
 	.readdir	= ytfs_readdir,
@@ -337,7 +359,8 @@ static struct fuse_operations ytfs_oper = {
 	.flush          = ytfs_flush,
 	.chown          = ytfs_chown,
 	.utimens        = ytfs_utimens,
-	.truncate       = ytfs_truncate
+	.truncate       = ytfs_truncate,
+	.unlink         = ytfs_unlink
 };
 
 int main(int argc, char *argv[])
