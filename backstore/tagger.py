@@ -1,4 +1,5 @@
 """ lots of dependencies for few lines of codes...
+git clone https://bitbucket.org/acoustid/chromaprint.git
 sudo add-apt-repository ppa:mc3man/trusty-media
 sudo apt-get update
 sudo apt-get dist-upgrade
