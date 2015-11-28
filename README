@@ -1,8 +1,0 @@
-To mount the filesystem, you must first have installed the FUSE and tablib
-libraries.  If this is not the case, the source code for both is included
-in directory for this project
-
-
-sed -i -e "s/ubuntu/$USER/g" ytfs.c
-gcc -Wall ytfs.c `pkg-config fuse --cflags --libs` -o ytfs -ltag_c"
-./ytfs [MOUNT_LOCATION]
