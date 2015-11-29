@@ -4,8 +4,7 @@ sudo add-apt-repository ppa:mc3man/trusty-media
 sudo apt-get update
 sudo apt-get dist-upgrade
 sudo apt-get install ffmpeg python3-pip libfftw3-dev libfftw3-doc
-        mutagen
-pip3 install pyacoustid
+pip3 install pyacoustid mutagen
 cd chromaprint
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF
 
