@@ -5,8 +5,8 @@ Your Tune File System
 :Info: Specialized file system aimed to manage music library
 :Authors: William Morlan, Yoel Ivan
 
-Dependecies
-===========
+Dependencies
+============
 
 + **FUSE**
 
@@ -19,6 +19,40 @@ Dependecies
 + **curl**
 
   *cURL* command line utillities are needed for back storage operation
+  
+Dependencies for Optional Feature
+=================================
+
++ **FFmpeg** and **libfftw3**
+
+  *chromaprint* lib dependencies to compute *FFT*, to install:
+  
+  - ``$ sudo add-apt-repository ppa:mc3man/trusty-media``
+  
+  - ``$ sudo apt-get update``
+  
+  - ``$ sudo apt-get dist-upgrade``
+  
+  - ``$ sudo apt-get install ffmpeg libfftw3-dev libfftw3-doc``
+
++ **chromaprint**
+  
+  library to extract fingerprint from audio file, required for *auto-tag* feature,
+  to install:
+  
+  - ``$ git clone https://bitbucket.org/acoustid/chromaprint.git``
+  
+  - ``$ cd chromaprint``
+  
+  - ``$ cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF``
+  
++ **pip3**, **pyacoustid**, and **mutagen**
+
+    required python module to access *acoustid* database to get metadata of fingerprinted audiofile, to install:
+    
+    - ``$ sudo apt-get install python3-pip``
+    
+    - ``$ sudo pip3 install  pyacoustid mutagen``
   
 Compiling
 =========
