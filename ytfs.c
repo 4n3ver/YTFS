@@ -291,7 +291,7 @@ static int ytfs_flush(const char *path, struct fuse_file_info *fi)
 
   //send file to remote server
   char curl_command[256];
-  sprintf(curl_command,"curl -X POST -F file=@\"%s\" http://127.0.0.1:8000",realpath);
+  sprintf(curl_command,"curl -X POST -F file=@\"%s\" http://127.0.0.1:8000/store",realpath);
   system(curl_command);
 
   return 0;
