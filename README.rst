@@ -50,7 +50,7 @@ Dependencies for Optional Feature
 
   required python module to access *acoustid* database to get metadata of fingerprinted audiofile, to install:
     
-    - ``$ sudo apt-get install python3-pip``
+  - ``$ sudo apt-get install python3-pip``
     
   - ``$ sudo pip3 install  pyacoustid mutagen``
   
