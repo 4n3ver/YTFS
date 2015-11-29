@@ -72,8 +72,21 @@ Installation
 
   ``./ytfs [MOUNT_LOCATION]``
   
+Running the Remote Server
+=========================
+
+Be sure to also change the hardcoded IP address on the ytfs.c so that the file system upload the music correctly.
+
++ ``$ cd backstore``
+
++ ``$ python3 server.py [listening_ip] [listening_port]
+
+In order to retrieve download, user can simply go to their browser and put the listening ip address and port in their browser and download it manually from there.
+  
 Optional Feature
 ================
+
+**Auto-tagger**, this optional feature will periodically scan through the file system for song without tag, and use *acoustid* server to determine its tag so the file system can sort it properly.
 
 + ``$ cd backstore``
 
