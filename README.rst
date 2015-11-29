@@ -48,11 +48,11 @@ Dependencies for Optional Feature
   
 + **pip3**, **pyacoustid**, and **mutagen**
 
-    required python module to access *acoustid* database to get metadata of fingerprinted audiofile, to install:
+  required python module to access *acoustid* database to get metadata of fingerprinted audiofile, to install:
     
     - ``$ sudo apt-get install python3-pip``
     
-    - ``$ sudo pip3 install  pyacoustid mutagen``
+  - ``$ sudo pip3 install  pyacoustid mutagen``
   
 Compiling
 =========
@@ -71,3 +71,10 @@ Installation
 + Deploy the file system by typing command below, ``tmp/ytfs`` is the recommended ``[MOUNT_LOCATION]``
 
   ``./ytfs [MOUNT_LOCATION]``
+  
+Optional Feature
+================
+
++ ``$ cd backstore``
+
++ ``$ python3 client.py [SCAN_INTERVAL]``
